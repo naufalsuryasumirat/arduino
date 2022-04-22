@@ -3,12 +3,14 @@
 #include <Servo.h>
 #include <Wire.h>
 
+#define START 'A'
+
 const byte n_rows = 4;
 const byte n_cols = 4;
 const long interval = 1000; // 1 second
-const int countdown_value = 15; // 15 second timer
-const int cooldown_value = 10; // 10 second cooldown
-const int opened_value = 10; // 10 second opened timer
+const int countdown_value = 3; // 15 second timer
+const int cooldown_value = 1; // 10 second cooldown
+const int opened_value = 1; // 10 second opened timer
 
 String password = String("1234");
 String inputted = String();
@@ -20,9 +22,9 @@ int countdown_timer = countdown_value;
 int cooldown_timer = cooldown_value;
 int opened_timer = opened_value;
 int cooldown = 0; // boolean cooldown
-int unlocked = 0;
-int input_mode = 0;
-int opened = 0;
+int unlocked = 0; // boolean unlocked
+int input_mode = 0; // boolean input_mode
+int opened = 0; // boolean door opened
 
 int open_angle = 180;
 int closed_angle = 90;
@@ -48,23 +50,24 @@ LiquidCrystal lcd(14, 15, 16, 17, 3, 2);
 Servo micro_servo;
 
 void setup() {
+    Wire.begin();
     Serial.begin(9600);
     lcd.begin(16, 2);
     lcd.noDisplay();
     micro_servo.attach(4, 500, 2500);
-    Wire.begin(1);
 }
 
 void loop() {
     unsigned long current_millis = millis();
 
-    // check input from arduino 2 here
+    // check password change here before other things
 
     if (unlocked) {
         if (!opened) { // opening
             micro_servo.write(open_angle);
             opened = 1;
             previous_opened_millis = current_millis;
+            send_door_state();
         } else {
             if (current_millis - previous_opened_millis >= interval) {
                 previous_opened_millis = current_millis;
@@ -77,16 +80,18 @@ void loop() {
                     clear_line(0);
                     opened = 0;
                     unlocked = 0;
+                    send_door_state();
                 }
                 clear_line(1);
             }
         }
         lcd.setCursor(0, 1);
         lcd.print(String("COUNTDOWN: ") + String(opened_timer));
-        // check input from arduino 2 here
-        // control door from here
         return;
     }
+
+    // check input from arduino 2 here
+    if (check_button_state()) return;
 
     if (cooldown) {
         if (current_millis - previous_cooldown_millis >= interval) {
@@ -105,14 +110,11 @@ void loop() {
         }
         return;
     }
-    {'1', '2', '3', 'A'},
-    {'4', '5', '6', 'B'},
-    {'7', '8', '9', 'C'},
-    {'*', '0', '#', 'D'}
+    
     char keypressed = myKeypad.getKey();
     if (keypressed != NO_KEY) {
         if (!input_mode) {
-            if (keypressed == 'A') { // button to start prompt
+            if (keypressed == START) { // button to start prompt
                 lcd.display();
                 input_mode = 1;
                 previous_millis = current_millis;
@@ -180,4 +182,25 @@ void reset_millis(unsigned long current_millis) {
     previous_millis = current_millis;
     previous_cooldown_millis = current_millis;
     previous_opened_millis = current_millis;
+}
+
+void send_door_state() {
+    Wire.beginTransmission(1);
+    Wire.write(opened);
+    Wire.endTransmission();
+}
+
+int check_button_state() {
+    Wire.requestFrom(1, 1); // request if opened from arduino 2
+    int button_state = Wire.read();
+    if (button_state) {
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print("UNLOCKED");
+        unlocked = 1;
+        inputted = String();
+        unlocked = 1;
+        opened = 0;
+    }
+    return button_state;
 }
