@@ -1,10 +1,3 @@
-// Init LCD
-
-// one int -1 is null
-// if -1 change to 0/1
-// if 0/1 do logic, if same then overwrite, 
-// if different then out or in (+ or - count)
-
 #include <LiquidCrystal.h>
 #include <Wire.h>
 
@@ -21,6 +14,7 @@ int button_state = 0;
 
 int count_inside = 0;
 
+// Init LCD
 LiquidCrystal lcd(14, 15, 16, 17, 3, 2);
 
 void setup() {

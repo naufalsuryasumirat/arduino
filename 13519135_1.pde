@@ -3,7 +3,12 @@
 #include <Servo.h>
 #include <Wire.h>
 
+// keypad
 #define START 'A'
+
+// micro servo
+#define OPEN_ANGLE 180
+#define CLOSED_ANGLE 90
 
 const byte n_rows = 4;
 const byte n_cols = 4;
@@ -26,9 +31,6 @@ int unlocked = 0; // boolean unlocked
 int input_mode = 0; // boolean input_mode
 int opened = 0; // boolean door opened
 
-int open_angle = 180;
-int closed_angle = 90;
-
 char keymap[n_rows][n_cols] = {
     {'1', '2', '3', 'A'},
     {'4', '5', '6', 'B'},
@@ -41,7 +43,7 @@ byte row_pins[n_rows] = {12, 11, 10, 9};
 byte col_pins[n_cols] = {8, 7, 6, 5};
 
 // Init keypad
-Keypad myKeypad = Keypad(makeKeymap(keymap), 
+Keypad my_keypad = Keypad(makeKeymap(keymap), 
     row_pins, col_pins, n_rows, n_cols);
 
 // Init LCD
@@ -61,10 +63,11 @@ void loop() {
     unsigned long current_millis = millis();
 
     // check password change here before other things
+    check_password_changed();
 
     if (unlocked) {
         if (!opened) { // opening
-            micro_servo.write(open_angle);
+            micro_servo.write(OPEN_ANGLE);
             opened = 1;
             previous_opened_millis = current_millis;
             send_door_state();
@@ -74,7 +77,7 @@ void loop() {
                 opened_timer--;
                 if (opened_timer == -1) {
                     opened_timer = opened_value;
-                    micro_servo.write(closed_angle);
+                    micro_servo.write(CLOSED_ANGLE);
                     reset_millis(current_millis);
                     reset_timers();
                     clear_line(0);
@@ -111,7 +114,7 @@ void loop() {
         return;
     }
     
-    char keypressed = myKeypad.getKey();
+    char keypressed = my_keypad.getKey();
     if (keypressed != NO_KEY) {
         if (!input_mode) {
             if (keypressed == START) { // button to start prompt
@@ -203,4 +206,14 @@ int check_button_state() {
         opened = 0;
     }
     return button_state;
+}
+
+void check_password_changed() {
+    Wire.requestFrom(2, 5); // request if changed from arduino 3
+    int changed = Wire.read();
+    if (!changed) return;
+    password = String();
+    while (Wire.available()) password += (char)Wire.read();
+    password = (password.length() == 4) ? password : String("1234");
+    Serial.println(password);
 }
