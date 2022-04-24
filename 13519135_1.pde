@@ -204,6 +204,10 @@ int check_button_state() {
         inputted = String();
         unlocked = 1;
         opened = 0;
+        cooldown = 0;
+        cooldown_timer = cooldown_value;
+        countdown_timer = countdown_value;
+        opened_timer = opened_value;
     }
     return button_state;
 }
