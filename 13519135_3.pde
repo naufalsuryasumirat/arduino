@@ -51,6 +51,7 @@ void loop() {
         }
         write_line(1, inputted);
     }
+    delay(50);
 }
 
 void send_pass() {

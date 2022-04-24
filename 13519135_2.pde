@@ -59,6 +59,7 @@ void loop() {
     } else { // if not opened, check for button input
         button_state = digitalRead(PUSH_BUTTON);
     }
+    delay(50);
 }
 
 void change_state(int how_many) {

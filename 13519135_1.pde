@@ -13,9 +13,9 @@
 const byte n_rows = 4;
 const byte n_cols = 4;
 const long interval = 1000; // 1 second
-const int countdown_value = 3; // 15 second timer
-const int cooldown_value = 1; // 10 second cooldown
-const int opened_value = 1; // 10 second opened timer
+const int countdown_value = 15; // 15 second timer
+const int cooldown_value = 10; // 10 second cooldown
+const int opened_value = 10; // 10 second opened timer
 
 String password = String("1234");
 String inputted = String();
@@ -90,11 +90,15 @@ void loop() {
         }
         lcd.setCursor(0, 1);
         lcd.print(String("COUNTDOWN: ") + String(opened_timer));
+        delay(50);
         return;
     }
 
     // check input from arduino 2 here
-    if (check_button_state()) return;
+    if (check_button_state()) {
+        delay(50);
+        return;
+    }
 
     if (cooldown) {
         if (current_millis - previous_cooldown_millis >= interval) {
@@ -105,12 +109,14 @@ void loop() {
                 previous_millis = current_millis;
                 cooldown = 0;
                 lcd.clear();
+                delay(50);
                 return;
             }
             clear_line(1);
             lcd.setCursor(0, 1);
             lcd.print(String(cooldown_timer));
         }
+        delay(50);
         return;
     }
     
@@ -136,6 +142,7 @@ void loop() {
                     lcd.print("UNLOCKED");
                     unlocked = 1;
                     inputted = String();
+                    delay(50);
                     return;
                 } else {
                     lcd.setCursor(0, 0);
@@ -161,6 +168,7 @@ void loop() {
             lcd.print("COOLDOWN");
             lcd.setCursor(0, 1);
             lcd.print(String(cooldown_timer));
+            delay(50);
             return;
         }
         clear_line(1);
@@ -168,6 +176,7 @@ void loop() {
 
     lcd.setCursor(0, 1);
     lcd.print(String("COUNTDOWN: ") + String(countdown_timer));
+    delay(50);
 }
 
 void clear_line(int x) {
